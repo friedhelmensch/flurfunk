@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, View, Text, Alert, SafeAreaView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { MessageMap } from './components/MessageMap';
 import { MessageFeed } from './components/MessageFeed';
-import { PostMessage } from './components/PostMessage';
+import { ComposeButton } from './components/ComposeButton';
+import { ComposeModal } from './components/ComposeModal';
 import { Message, Location as LocationType, Region } from './types';
 import { api } from './services/api';
+import { calculateRegionRadius } from './utils/location';
 
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -19,6 +21,8 @@ export default function App() {
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isComposeModalVisible, setIsComposeModalVisible] = useState(false);
+  const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     requestLocationPermission();
@@ -60,12 +64,28 @@ export default function App() {
 
   const loadNearbyMessages = async () => {
     if (!userLocation) return;
+    await loadMessagesForRegion(region);
+  };
 
+  const loadMessagesForRegion = async (mapRegion: Region) => {
     setIsLoading(true);
     setError(null);
     
     try {
-      const nearbyMessages = await api.getNearbyMessages(userLocation, 5);
+      // Calculate radius needed to cover the visible map area
+      const radius = calculateRegionRadius(
+        mapRegion.latitudeDelta,
+        mapRegion.longitudeDelta,
+        mapRegion.latitude
+      );
+      
+      // Use map center as the query location
+      const mapCenter = {
+        latitude: mapRegion.latitude,
+        longitude: mapRegion.longitude,
+      };
+      
+      const nearbyMessages = await api.getNearbyMessages(mapCenter, radius);
       setMessages(nearbyMessages);
     } catch (error) {
       console.error('Failed to load messages:', error);
@@ -77,12 +97,27 @@ export default function App() {
 
   const handlePostMessage = async (text: string, location: LocationType) => {
     try {
-      const newMessage = await api.createMessage(text, location);
-      setMessages(prev => [newMessage, ...prev]);
+      await api.createMessage(text, location);
+      // Refresh the messages in the current region after posting
+      loadMessagesForRegion(region);
     } catch (error) {
       console.error('Failed to post message:', error);
-      throw error; // Re-throw so PostMessage component can handle it
+      throw error; // Re-throw so ComposeModal can handle it
     }
+  };
+
+  const handleRegionChange = (newRegion: Region) => {
+    setRegion(newRegion);
+    
+    // Clear existing timeout
+    if (debounceRef.current) {
+      clearTimeout(debounceRef.current);
+    }
+    
+    // Debounce the API call to avoid too many requests during map interaction
+    debounceRef.current = setTimeout(() => {
+      loadMessagesForRegion(newRegion);
+    }, 500); // 500ms delay
   };
 
   if (!userLocation) {
@@ -97,29 +132,41 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="auto" />
+      
       <View style={styles.header}>
         <MessageMap
           messages={messages}
           userLocation={userLocation}
           region={region}
-          onRegionChange={setRegion}
+          onRegionChange={handleRegionChange}
         />
         
-        <PostMessage
-          userLocation={userLocation}
-          onPost={handlePostMessage}
-        />
+        <ComposeButton onPress={() => setIsComposeModalVisible(true)} />
 
         <View style={styles.feedHeader}>
           <Text style={styles.feedTitle}>
-            Messages nearby ({messages.length})
+            Messages in this area ({messages.length})
           </Text>
           {isLoading && <Text style={styles.loadingText}>Loading...</Text>}
           {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
       </View>
 
-      <MessageFeed messages={messages} />
+      <MessageFeed 
+        messages={messages} 
+        onLoadMore={() => {
+          // For now, just reload the current region
+          // In the future, we could implement pagination
+          loadMessagesForRegion(region);
+        }}
+      />
+      
+      <ComposeModal
+        visible={isComposeModalVisible}
+        userLocation={userLocation}
+        onPost={handlePostMessage}
+        onClose={() => setIsComposeModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

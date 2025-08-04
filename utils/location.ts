@@ -49,3 +49,20 @@ export const formatDistance = (distanceKm: number): string => {
   }
   return `${distanceKm.toFixed(1)}km`;
 };
+
+// Calculate radius needed to cover the visible map region
+export const calculateRegionRadius = (
+  latitudeDelta: number,
+  longitudeDelta: number,
+  centerLatitude: number
+): number => {
+  // Convert deltas to distance in km
+  const latDistance = latitudeDelta * 111; // 1 degree latitude ≈ 111 km
+  const lonDistance = longitudeDelta * 111 * Math.cos(toRadians(centerLatitude));
+  
+  // Calculate diagonal distance to cover the entire visible area
+  const diagonalDistance = Math.sqrt(latDistance * latDistance + lonDistance * lonDistance);
+  
+  // Add 20% buffer to ensure we get all messages in the visible area
+  return Math.max(diagonalDistance * 0.6, 1); // Minimum 1km radius
+};
