@@ -11,10 +11,15 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
-# Build outputs
+# Expo
+.expo/
 dist/
-build/
-.vercel/
+web-build/
+
+# Build outputs
+*.apk
+*.ipa
+*.tar.gz
 
 # Logs
 *.log
@@ -23,22 +28,3 @@ build/
 .DS_Store
 .DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-
-# IDE files
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# Expo
-.expo/
-dist/
-web-build/
-
-# Temporary files
-*.tmp
-*.temp
