@@ -8,7 +8,7 @@ import { ComposeButton } from './components/ComposeButton';
 import { ComposeModal } from './components/ComposeModal';
 import { Message, Location as LocationType, Region } from './types';
 import { api } from './services/api';
-import { calculateRegionRadius } from './utils/location';
+import { calculateRegionRadius, calculateDistance } from './utils/location';
 
 export default function App() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -20,6 +20,7 @@ export default function App() {
     longitudeDelta: 0.01,
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isComposeModalVisible, setIsComposeModalVisible] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
@@ -64,11 +65,13 @@ export default function App() {
 
   const loadNearbyMessages = async () => {
     if (!userLocation) return;
-    await loadMessagesForRegion(region);
+    await loadMessagesForRegion(region, isInitialLoad);
   };
 
-  const loadMessagesForRegion = async (mapRegion: Region) => {
-    setIsLoading(true);
+  const loadMessagesForRegion = async (mapRegion: Region, showLoading = false) => {
+    if (showLoading) {
+      setIsLoading(true);
+    }
     setError(null);
     
     try {
@@ -86,12 +89,34 @@ export default function App() {
       };
       
       const nearbyMessages = await api.getNearbyMessages(mapCenter, radius);
-      setMessages(nearbyMessages);
+      
+      // Calculate distance from user and filter by visible map radius
+      const messagesWithDistance = nearbyMessages
+        .map(message => ({
+          ...message,
+          distanceFromUser: userLocation ? calculateDistance(
+            userLocation.latitude,
+            userLocation.longitude,
+            message.latitude,
+            message.longitude
+          ) : undefined,
+          distanceFromMapCenter: calculateDistance(
+            mapCenter.latitude,
+            mapCenter.longitude,
+            message.latitude,
+            message.longitude
+          ),
+        }))
+        // Filter to only show messages within the visible map area
+        .filter(message => message.distanceFromMapCenter <= radius);
+      
+      setMessages(messagesWithDistance);
     } catch (error) {
       console.error('Failed to load messages:', error);
       setError('Failed to load nearby messages');
     } finally {
       setIsLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
@@ -99,7 +124,7 @@ export default function App() {
     try {
       await api.createMessage(text, location);
       // Refresh the messages in the current region after posting
-      loadMessagesForRegion(region);
+      loadMessagesForRegion(region, false);
     } catch (error) {
       console.error('Failed to post message:', error);
       throw error; // Re-throw so ComposeModal can handle it
@@ -116,7 +141,7 @@ export default function App() {
     
     // Debounce the API call to avoid too many requests during map interaction
     debounceRef.current = setTimeout(() => {
-      loadMessagesForRegion(newRegion);
+      loadMessagesForRegion(newRegion, false); // Don't show loading for map movements
     }, 500); // 500ms delay
   };
 
@@ -157,7 +182,7 @@ export default function App() {
         onLoadMore={() => {
           // For now, just reload the current region
           // In the future, we could implement pagination
-          loadMessagesForRegion(region);
+          loadMessagesForRegion(region, false);
         }}
       />
       
