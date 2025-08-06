@@ -6,9 +6,13 @@ import { formatDistance } from '../utils/location';
 interface MessageFeedProps {
   messages: Message[];
   onLoadMore?: () => void;
+  onMessagePress?: (message: Message) => void;
 }
 
-const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
+const MessageItem: React.FC<{ 
+  message: Message;
+  onPress?: (message: Message) => void;
+}> = ({ message, onPress }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Format timestamp to relative time (like Twitter)
@@ -35,7 +39,13 @@ const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
   return (
     <TouchableOpacity 
       style={styles.messageItem} 
-      onPress={() => setIsExpanded(!isExpanded)}
+      onPress={() => {
+        if (onPress) {
+          onPress(message);
+        } else {
+          setIsExpanded(!isExpanded);
+        }
+      }}
       activeOpacity={0.95}
     >
       <Text style={styles.messageText}>
@@ -57,7 +67,7 @@ const MessageItem: React.FC<{ message: Message }> = ({ message }) => {
   );
 };
 
-export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, onLoadMore }) => {
+export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, onLoadMore, onMessagePress }) => {
   const handleEndReached = () => {
     if (onLoadMore) {
       onLoadMore();
@@ -68,7 +78,7 @@ export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, onLoadMore }
     <FlatList
       data={messages}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <MessageItem message={item} />}
+      renderItem={({ item }) => <MessageItem message={item} onPress={onMessagePress} />}
       style={styles.feed}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={styles.feedContent}

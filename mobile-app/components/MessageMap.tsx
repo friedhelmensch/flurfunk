@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import MapView, { Marker, Region } from 'react-native-maps';
 import { Message, Location } from '../types';
 
@@ -8,6 +8,7 @@ interface MessageMapProps {
   userLocation: Location | null;
   region: Region;
   onRegionChange: (region: Region) => void;
+  isLoading?: boolean;
 }
 
 export const MessageMap: React.FC<MessageMapProps> = ({
@@ -15,6 +16,7 @@ export const MessageMap: React.FC<MessageMapProps> = ({
   userLocation,
   region,
   onRegionChange,
+  isLoading = false,
 }) => {
   return (
     <View style={styles.container}>
@@ -38,6 +40,12 @@ export const MessageMap: React.FC<MessageMapProps> = ({
           />
         ))}
       </MapView>
+      
+      {isLoading && (
+        <View style={styles.loadingIndicator}>
+          <ActivityIndicator size="small" color="#1d9bf0" />
+        </View>
+      )}
     </View>
   );
 };
@@ -59,5 +67,18 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
+  },
+  loadingIndicator: {
+    position: 'absolute',
+    bottom: 12,
+    left: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 16,
+    padding: 8,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
   },
 });

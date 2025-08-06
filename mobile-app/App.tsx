@@ -6,6 +6,7 @@ import { MessageMap } from './components/MessageMap';
 import { MessageFeed } from './components/MessageFeed';
 import { ComposeButton } from './components/ComposeButton';
 import { ComposeModal } from './components/ComposeModal';
+import { MessageDetail } from './components/MessageDetail';
 import { Message, Location as LocationType, Region } from './types';
 import { api } from './services/api';
 import { calculateRegionRadius, calculateDistance } from './utils/location';
@@ -23,6 +24,7 @@ export default function App() {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isComposeModalVisible, setIsComposeModalVisible] = useState(false);
+  const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ export default function App() {
     await loadMessagesForRegion(region, isInitialLoad);
   };
 
-  const loadMessagesForRegion = async (mapRegion: Region, showLoading = false) => {
+  const loadMessagesForRegion = async (mapRegion: Region, showLoading = true) => {
     if (showLoading) {
       setIsLoading(true);
     }
@@ -141,7 +143,7 @@ export default function App() {
     
     // Debounce the API call to avoid too many requests during map interaction
     debounceRef.current = setTimeout(() => {
-      loadMessagesForRegion(newRegion, false); // Don't show loading for map movements
+      loadMessagesForRegion(newRegion, true); // Show subtle loading indicator for map movements
     }, 500); // 500ms delay
   };
 
@@ -164,6 +166,7 @@ export default function App() {
           userLocation={userLocation}
           region={region}
           onRegionChange={handleRegionChange}
+          isLoading={isLoading}
         />
         
         <ComposeButton onPress={() => setIsComposeModalVisible(true)} />
@@ -172,7 +175,6 @@ export default function App() {
           <Text style={styles.feedTitle}>
             Messages in this area ({messages.length})
           </Text>
-          {isLoading && <Text style={styles.loadingText}>Loading...</Text>}
           {error && <Text style={styles.errorText}>{error}</Text>}
         </View>
       </View>
@@ -184,6 +186,7 @@ export default function App() {
           // In the future, we could implement pagination
           loadMessagesForRegion(region, false);
         }}
+        onMessagePress={setSelectedMessage}
       />
       
       <ComposeModal
@@ -191,6 +194,13 @@ export default function App() {
         userLocation={userLocation}
         onPost={handlePostMessage}
         onClose={() => setIsComposeModalVisible(false)}
+      />
+      
+      <MessageDetail
+        message={selectedMessage}
+        userLocation={userLocation}
+        visible={selectedMessage !== null}
+        onClose={() => setSelectedMessage(null)}
       />
     </SafeAreaView>
   );
