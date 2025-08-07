@@ -15,17 +15,10 @@ const MessageItem: React.FC<{
 }> = ({ message, onPress }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Generate a consistent username from message ID
-  const getUsername = (id: string) => {
-    const names = ['kola', 'benjin', 'mitch', 'alex', 'sarah', 'tom', 'lisa', 'mike'];
-    const hash = id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-    return names[hash % names.length];
-  };
-  
-  // Generate avatar color from username
-  const getAvatarColor = (username: string) => {
+  // Generate avatar color from message ID
+  const getAvatarColor = (id: string) => {
     const colors = ['#FF6B47', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#DDA0DD', '#98D8C8', '#F7DC6F'];
-    const hash = username.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
+    const hash = id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
     return colors[hash % colors.length];
   };
   
@@ -44,8 +37,7 @@ const MessageItem: React.FC<{
     return new Date(timestamp).toLocaleDateString();
   };
   
-  const username = getUsername(message.id);
-  const avatarColor = getAvatarColor(username);
+  const avatarColor = getAvatarColor(message.id);
   const timeAgo = getTimeAgo(message.timestamp);
   const shouldTruncate = message.text.length > 140 && !isExpanded;
   const displayText = shouldTruncate 
@@ -66,11 +58,10 @@ const MessageItem: React.FC<{
     >
       <View style={styles.messageHeader}>
         <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-          <Text style={styles.avatarText}>{username.charAt(0).toUpperCase()}</Text>
+          <Text style={styles.avatarText}>•</Text>
         </View>
         <View style={styles.messageInfo}>
           <View style={styles.userInfo}>
-            <Text style={styles.username}>{username}</Text>
             <Text style={styles.timeAgo}>{timeAgo}</Text>
             {message.distanceFromUser !== undefined && (
               <>
@@ -103,30 +94,22 @@ const MessageItem: React.FC<{
 };
 
 export const MessageFeed: React.FC<MessageFeedProps> = ({ messages, onLoadMore, onMessagePress }) => {
-  const handleEndReached = () => {
-    if (onLoadMore) {
-      onLoadMore();
-    }
-  };
-
   return (
-    <FlatList
-      data={messages}
-      keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <MessageItem message={item} onPress={onMessagePress} />}
-      style={styles.feed}
-      showsVerticalScrollIndicator={false}
-      contentContainerStyle={styles.feedContent}
-      onEndReached={handleEndReached}
-      onEndReachedThreshold={0.1}
-      ItemSeparatorComponent={() => <View style={styles.separator} />}
-    />
+    <View style={styles.feed}>
+      <View style={styles.feedContent}>
+        {messages.map((message, index) => (
+          <View key={message.id}>
+            <MessageItem message={message} onPress={onMessagePress} />
+            {index < messages.length - 1 && <View style={styles.separator} />}
+          </View>
+        ))}
+      </View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   feed: {
-    flex: 1,
     backgroundColor: '#f5f5f5',
   },
   feedContent: {
@@ -170,12 +153,6 @@ const styles = StyleSheet.create({
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  username: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginRight: 8,
   },
   timeAgo: {
     fontSize: 12,

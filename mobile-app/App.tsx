@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Alert, SafeAreaView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, Alert, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { MessageMap } from './components/MessageMap';
@@ -167,60 +167,62 @@ export default function App() {
         </View>
       </View>
 
-      {/* Full Screen Map */}
-      <View style={styles.mapContainer}>
-        <MessageMap
-          messages={messages}
-          userLocation={userLocation}
-          region={region}
-          onRegionChange={handleRegionChange}
-          isLoading={isLoading}
-        />
-        
-      </View>
-
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'people' && styles.activeTab]}
-          onPress={() => setActiveTab('people')}
-        >
-          <Text style={[styles.tabText, activeTab === 'people' && styles.activeTabText]}>People</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'events' && styles.activeTab]}
-          onPress={() => setActiveTab('events')}
-        >
-          <Text style={[styles.tabText, activeTab === 'events' && styles.activeTabText]}>Events</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.tab, activeTab === 'news' && styles.activeTab]}
-          onPress={() => setActiveTab('news')}
-        >
-          <Text style={[styles.tabText, activeTab === 'news' && styles.activeTabText]}>News</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content Area */}
-      <View style={styles.contentContainer}>
-        {activeTab === 'people' && (
-          <MessageFeed 
-            messages={messages} 
-            onLoadMore={() => loadMessagesForRegion(region, false)}
-            onMessagePress={setSelectedMessage}
+      {/* Scrollable Content */}
+      <ScrollView style={styles.scrollView}>
+        {/* Map Header */}
+        <View style={styles.mapContainer}>
+          <MessageMap
+            messages={messages}
+            userLocation={userLocation}
+            region={region}
+            onRegionChange={handleRegionChange}
+            isLoading={isLoading}
           />
-        )}
-        {activeTab === 'events' && (
-          <View style={styles.emptyTab}>
-            <Text style={styles.emptyTabText}>Events coming soon</Text>
-          </View>
-        )}
-        {activeTab === 'news' && (
-          <View style={styles.emptyTab}>
-            <Text style={styles.emptyTabText}>News coming soon</Text>
-          </View>
-        )}
-      </View>
+        </View>
+
+        {/* Tab Navigation */}
+        <View style={styles.tabContainer}>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'people' && styles.activeTab]}
+            onPress={() => setActiveTab('people')}
+          >
+            <Text style={[styles.tabText, activeTab === 'people' && styles.activeTabText]}>People</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'events' && styles.activeTab]}
+            onPress={() => setActiveTab('events')}
+          >
+            <Text style={[styles.tabText, activeTab === 'events' && styles.activeTabText]}>Events</Text>
+          </TouchableOpacity>
+          <TouchableOpacity 
+            style={[styles.tab, activeTab === 'news' && styles.activeTab]}
+            onPress={() => setActiveTab('news')}
+          >
+            <Text style={[styles.tabText, activeTab === 'news' && styles.activeTabText]}>News</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Content Area */}
+        <View style={styles.contentContainer}>
+          {activeTab === 'people' && (
+            <MessageFeed 
+              messages={messages} 
+              onLoadMore={() => loadMessagesForRegion(region, false)}
+              onMessagePress={setSelectedMessage}
+            />
+          )}
+          {activeTab === 'events' && (
+            <View style={styles.emptyTab}>
+              <Text style={styles.emptyTabText}>Events coming soon</Text>
+            </View>
+          )}
+          {activeTab === 'news' && (
+            <View style={styles.emptyTab}>
+              <Text style={styles.emptyTabText}>News coming soon</Text>
+            </View>
+          )}
+        </View>
+      </ScrollView>
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
@@ -285,8 +287,11 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
-  mapContainer: {
+  scrollView: {
     flex: 1,
+  },
+  mapContainer: {
+    height: 300,
     position: 'relative',
   },
   tabContainer: {
@@ -315,8 +320,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   contentContainer: {
-    flex: 0.6,
     backgroundColor: 'white',
+    minHeight: 400,
   },
   emptyTab: {
     flex: 1,
