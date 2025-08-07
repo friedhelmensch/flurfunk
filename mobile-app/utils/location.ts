@@ -64,5 +64,5 @@ export const calculateRegionRadius = (
   const diagonalDistance = Math.sqrt(latDistance * latDistance + lonDistance * lonDistance);
   
   // Add 20% buffer to ensure we get all messages in the visible area
-  return Math.max(diagonalDistance * 0.6, 1); // Minimum 1km radius
+  return Math.max(diagonalDistance * 0.6, 1); // Minimum 1km radius, no maximum limit
 };

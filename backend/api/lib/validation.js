@@ -49,8 +49,8 @@ export const validateNearbyQuery = (latitude, longitude, radius) => {
   // Radius validation
   if (typeof radius !== 'number') {
     errors.push('Radius must be a number');
-  } else if (radius <= 0 || radius > 50) {
-    errors.push('Radius must be between 0 and 50 km');
+  } else if (radius <= 0) {
+    errors.push('Radius must be greater than 0');
   }
 
   return errors;
