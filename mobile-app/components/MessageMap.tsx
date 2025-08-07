@@ -52,26 +52,15 @@ export const MessageMap: React.FC<MessageMapProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    height: 200,
-    margin: 16,
-    borderRadius: 12,
-    overflow: 'hidden',
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    flex: 1,
   },
   map: {
     flex: 1,
   },
   loadingIndicator: {
     position: 'absolute',
-    bottom: 12,
-    left: 12,
+    bottom: 20,
+    right: 20,
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     borderRadius: 16,
     padding: 8,

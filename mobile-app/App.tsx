@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, Text, Alert, SafeAreaView } from 'react-native';
+import { StyleSheet, View, Text, Alert, SafeAreaView, TouchableOpacity } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import * as Location from 'expo-location';
 import { MessageMap } from './components/MessageMap';
@@ -25,6 +25,7 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
   const [isComposeModalVisible, setIsComposeModalVisible] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
+  const [activeTab, setActiveTab] = useState<'people' | 'events' | 'news'>('people');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -142,17 +143,32 @@ export default function App() {
   if (!userLocation) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <Text style={styles.loadingText}>Getting your location...</Text>
-        <StatusBar style="auto" />
+        <StatusBar style="light" backgroundColor="#FF6B47" />
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>flurfunk</Text>
+        </View>
+        <View style={styles.loadingContent}>
+          <Text style={styles.loadingText}>Getting your location...</Text>
+        </View>
       </SafeAreaView>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar style="auto" />
+      <StatusBar style="light" backgroundColor="#FF6B47" />
       
+      {/* Header */}
       <View style={styles.header}>
+        <Text style={styles.headerTitle}>flurfunk</Text>
+        <View style={styles.headerButtons}>
+          <Text style={styles.headerButton}>📍</Text>
+          <Text style={styles.headerButton}>SWAG</Text>
+        </View>
+      </View>
+
+      {/* Full Screen Map */}
+      <View style={styles.mapContainer}>
         <MessageMap
           messages={messages}
           userLocation={userLocation}
@@ -161,25 +177,68 @@ export default function App() {
           isLoading={isLoading}
         />
         
-        <ComposeButton onPress={() => setIsComposeModalVisible(true)} />
-
-        <View style={styles.feedHeader}>
-          <Text style={styles.feedTitle}>
-            Messages in this area ({messages.length})
-          </Text>
-          {error && <Text style={styles.errorText}>{error}</Text>}
-        </View>
       </View>
 
-      <MessageFeed 
-        messages={messages} 
-        onLoadMore={() => {
-          // For now, just reload the current region
-          // In the future, we could implement pagination
-          loadMessagesForRegion(region, false);
-        }}
-        onMessagePress={setSelectedMessage}
-      />
+      {/* Tab Navigation */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'people' && styles.activeTab]}
+          onPress={() => setActiveTab('people')}
+        >
+          <Text style={[styles.tabText, activeTab === 'people' && styles.activeTabText]}>People</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'events' && styles.activeTab]}
+          onPress={() => setActiveTab('events')}
+        >
+          <Text style={[styles.tabText, activeTab === 'events' && styles.activeTabText]}>Events</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.tab, activeTab === 'news' && styles.activeTab]}
+          onPress={() => setActiveTab('news')}
+        >
+          <Text style={[styles.tabText, activeTab === 'news' && styles.activeTabText]}>News</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content Area */}
+      <View style={styles.contentContainer}>
+        {activeTab === 'people' && (
+          <MessageFeed 
+            messages={messages} 
+            onLoadMore={() => loadMessagesForRegion(region, false)}
+            onMessagePress={setSelectedMessage}
+          />
+        )}
+        {activeTab === 'events' && (
+          <View style={styles.emptyTab}>
+            <Text style={styles.emptyTabText}>Events coming soon</Text>
+          </View>
+        )}
+        {activeTab === 'news' && (
+          <View style={styles.emptyTab}>
+            <Text style={styles.emptyTabText}>News coming soon</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Bottom Navigation */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navButton}>
+          <View style={styles.recordButton} />
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={() => setIsComposeModalVisible(true)}>
+          <Text style={styles.navIcon}>✏️</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
+          <View style={styles.cameraButton}>
+            <Text style={styles.cameraText}>📷</Text>
+          </View>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton}>
+          <Text style={styles.navIcon}>⋯</Text>
+        </TouchableOpacity>
+      </View>
       
       <ComposeModal
         visible={isComposeModalVisible}
@@ -204,31 +263,114 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
-    backgroundColor: '#f5f5f5',
-    paddingTop: 10,
+    backgroundColor: '#FF6B47',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
-  loadingContainer: {
+  headerTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  headerButton: {
+    fontSize: 16,
+    color: 'white',
+    fontWeight: '600',
+  },
+  mapContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#e0e0e0',
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    borderBottomWidth: 2,
+    borderBottomColor: 'transparent',
+  },
+  activeTab: {
+    borderBottomColor: '#FF6B47',
+  },
+  tabText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '500',
+  },
+  activeTabText: {
+    color: '#FF6B47',
+    fontWeight: '600',
+  },
+  contentContainer: {
+    flex: 0.6,
+    backgroundColor: 'white',
+  },
+  emptyTab: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  emptyTabText: {
+    fontSize: 16,
+    color: '#999',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#333',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  navButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  navIcon: {
+    fontSize: 20,
+    color: 'white',
+  },
+  recordButton: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: '#FF4444',
+    borderWidth: 2,
+    borderColor: 'white',
+  },
+  cameraButton: {
+    backgroundColor: '#666',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  cameraText: {
+    fontSize: 16,
+  },
+  loadingContainer: {
+    flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  loadingContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingText: {
     fontSize: 16,
     color: '#666',
-  },
-  feedHeader: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  feedTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  errorText: {
-    fontSize: 12,
-    color: '#ff4444',
-    marginTop: 4,
   },
 });
