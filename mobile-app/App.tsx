@@ -92,7 +92,7 @@ export default function App() {
       
       const nearbyMessages = await api.getNearbyMessages(mapCenter, radius);
       
-      // Calculate distance from user and filter by visible map radius
+      // Calculate distance from user (backend already filters by radius)
       const messagesWithDistance = nearbyMessages
         .map(message => ({
           ...message,
@@ -102,15 +102,7 @@ export default function App() {
             message.latitude,
             message.longitude
           ) : undefined,
-          distanceFromMapCenter: calculateDistance(
-            mapCenter.latitude,
-            mapCenter.longitude,
-            message.latitude,
-            message.longitude
-          ),
-        }))
-        // Filter to only show messages within the visible map area
-        .filter(message => message.distanceFromMapCenter <= radius);
+        }));
       
       setMessages(messagesWithDistance);
     } catch (error) {

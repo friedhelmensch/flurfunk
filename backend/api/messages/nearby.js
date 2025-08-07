@@ -48,7 +48,7 @@ async function getNearbyMessages(req, res) {
       .rpc('get_nearby_messages', {
         user_lat: latitude,
         user_lng: longitude,
-        radius_km: Math.floor(radiusKm)
+        radius_km: radiusKm
       });
 
     if (error) {
