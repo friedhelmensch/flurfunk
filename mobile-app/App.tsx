@@ -26,6 +26,7 @@ export default function App() {
   const [isComposeModalVisible, setIsComposeModalVisible] = useState(false);
   const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
   const [activeTab, setActiveTab] = useState<'people' | 'events' | 'news'>('people');
+  const [activeBottomTab, setActiveBottomTab] = useState<'feed' | 'funk' | 'notifications' | 'more'>('feed');
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -162,8 +163,12 @@ export default function App() {
       <View style={styles.header}>
         <Text style={styles.headerTitle}>flurfunk</Text>
         <View style={styles.headerButtons}>
-          <Text style={styles.headerButton}>📍</Text>
-          <Text style={styles.headerButton}>SWAG</Text>
+          <TouchableOpacity style={styles.headerIconButton}>
+            <Text style={styles.headerIcon}>📍</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.headerTextButton}>
+            <Text style={styles.headerButtonText}>SWAG</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -226,19 +231,48 @@ export default function App() {
 
       {/* Bottom Navigation */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navButton}>
-          <View style={styles.recordButton} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton} onPress={() => setIsComposeModalVisible(true)}>
-          <Text style={styles.navIcon}>✏️</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <View style={styles.cameraButton}>
-            <Text style={styles.cameraText}>📷</Text>
+        <TouchableOpacity 
+          style={[styles.navButton, activeBottomTab === 'feed' && styles.activeNavButton]} 
+          onPress={() => setActiveBottomTab('feed')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.navIconContainer, activeBottomTab === 'feed' && styles.activeNavIconContainer]}>
+            <Text style={[styles.navIcon, activeBottomTab === 'feed' && styles.activeNavIcon]}>📱</Text>
           </View>
+          <Text style={[styles.navLabel, activeBottomTab === 'feed' && styles.activeNavLabel]}>Feed</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navButton}>
-          <Text style={styles.navIcon}>⋯</Text>
+        <TouchableOpacity 
+          style={[styles.navButton, activeBottomTab === 'funk' && styles.activeNavButton]} 
+          onPress={() => {
+            setActiveBottomTab('funk');
+            setIsComposeModalVisible(true);
+          }} 
+          activeOpacity={0.7}
+        >
+          <View style={[styles.navIconContainer, styles.funkButton, activeBottomTab === 'funk' && styles.activeNavIconContainer]}>
+            <Text style={styles.funkIcon}>+</Text>
+          </View>
+          <Text style={[styles.navLabel, activeBottomTab === 'funk' && styles.activeNavLabel]}>Funk</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.navButton, activeBottomTab === 'notifications' && styles.activeNavButton]} 
+          onPress={() => setActiveBottomTab('notifications')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.navIconContainer, activeBottomTab === 'notifications' && styles.activeNavIconContainer]}>
+            <Text style={[styles.navIcon, activeBottomTab === 'notifications' && styles.activeNavIcon]}>🔔</Text>
+          </View>
+          <Text style={[styles.navLabel, activeBottomTab === 'notifications' && styles.activeNavLabel]}>Notifications</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={[styles.navButton, activeBottomTab === 'more' && styles.activeNavButton]} 
+          onPress={() => setActiveBottomTab('more')}
+          activeOpacity={0.7}
+        >
+          <View style={[styles.navIconContainer, activeBottomTab === 'more' && styles.activeNavIconContainer]}>
+            <Text style={[styles.navIcon, activeBottomTab === 'more' && styles.activeNavIcon]}>⋯</Text>
+          </View>
+          <Text style={[styles.navLabel, activeBottomTab === 'more' && styles.activeNavLabel]}>More</Text>
         </TouchableOpacity>
       </View>
       
@@ -262,30 +296,57 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   header: {
     backgroundColor: '#FF6B47',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 16,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: 'white',
+    letterSpacing: 0.5,
   },
   headerButtons: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
+    gap: 8,
   },
-  headerButton: {
+  headerIconButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerIcon: {
     fontSize: 16,
+  },
+  headerTextButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  headerButtonText: {
+    fontSize: 14,
     color: 'white',
     fontWeight: '600',
+    letterSpacing: 0.5,
   },
   scrollView: {
     flex: 1,
@@ -296,31 +357,41 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    backgroundColor: 'white',
-    borderTopWidth: 1,
-    borderTopColor: '#e0e0e0',
+    backgroundColor: '#ffffff',
+    paddingHorizontal: 4,
+    paddingVertical: 4,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -1,
+    },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 3,
   },
   tab: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginHorizontal: 2,
     alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
+    borderRadius: 8,
   },
   activeTab: {
-    borderBottomColor: '#FF6B47',
+    backgroundColor: '#f0f0f0',
   },
   tabText: {
-    fontSize: 16,
-    color: '#666',
-    fontWeight: '500',
+    fontSize: 15,
+    color: '#8e8e93',
+    fontWeight: '600',
+    letterSpacing: 0.3,
   },
   activeTabText: {
     color: '#FF6B47',
-    fontWeight: '600',
+    fontWeight: '700',
   },
   contentContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#f8f9fa',
     minHeight: 400,
   },
   emptyTab: {
@@ -334,40 +405,79 @@ const styles = StyleSheet.create({
   },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: '#333',
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+    backgroundColor: '#ffffff',
+    paddingTop: 12,
+    paddingBottom: 20,
+    paddingHorizontal: 16,
     justifyContent: 'space-around',
     alignItems: 'center',
+    borderTopWidth: 0.5,
+    borderTopColor: '#e5e5ea',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: -2,
+    },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 8,
   },
   navButton: {
     alignItems: 'center',
     justifyContent: 'center',
+    minWidth: 44,
+    minHeight: 44,
+  },
+  activeNavButton: {
+    // No additional styling needed for the container
+  },
+  navLabel: {
+    fontSize: 10,
+    color: '#8e8e93',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  activeNavLabel: {
+    color: '#FF6B47',
+    fontWeight: '600',
+  },
+  navIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#f0f0f0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  activeNavIconContainer: {
+    backgroundColor: '#FF6B47',
   },
   navIcon: {
-    fontSize: 20,
+    fontSize: 14,
+    color: '#8e8e93',
+  },
+  activeNavIcon: {
     color: 'white',
   },
-  recordButton: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: '#FF4444',
-    borderWidth: 2,
-    borderColor: 'white',
+  funkButton: {
+    backgroundColor: '#FF6B47',
+    shadowColor: '#FF6B47',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 4,
   },
-  cameraButton: {
-    backgroundColor: '#666',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 12,
-  },
-  cameraText: {
-    fontSize: 16,
+  funkIcon: {
+    fontSize: 18,
+    color: 'white',
+    fontWeight: '600',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#f8f9fa',
   },
   loadingContent: {
     flex: 1,
